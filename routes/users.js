@@ -168,4 +168,33 @@ router.post("/signup", function (req, res, next) {
   return;
 });
 
+// GET /recenzije
+router.get("/recenzije", function (req, res, next) {
+  res.render("users/recenzije");
+});
+
+// POST /sent
+router.post("/sent", authRequired, function (req, res, next) {
+  const schema = Joi.object({
+    rating: Joi.number().integer().min(1).max(5).required(), // Validacija za ocjenu
+    message: Joi.string().min(3).max(255).required(),
+  });
+
+  const validationResult = schema.validate(req.body);
+  if (validationResult.error) {
+    return res.status(400).json({ error: validationResult.error.details[0].message });
+  }
+
+  const { rating, message } = req.body;
+  const stmt = db.prepare("INSERT INTO messages (rating, message, sender_id) VALUES (?, ?, ?)");
+  const messageSent = stmt.run(rating, message, req.user.sub);
+
+  if (messageSent.changes && messageSent.changes === 1) {
+    res.render("users/recenzije", { result: { messageSent: true } });
+  } else {
+    res.render("users/recenzije", { result: { database_error: true } });
+  }
+});
+
+
 module.exports = router;

@@ -218,29 +218,14 @@ router.get("/print/:id", function (req, res, next) {
     res.render("competitions/print", {result: {items: dbResult, print: true}})
 });
 
-// POST /sent
-router.post("/sent", authRequired, function (req, res, next) {
-    const schema = Joi.object({
-        rating: Joi.number().integer().min(1).max(5).required(), // Validacija za ocjenu
-        message: Joi.string().min(3).max(255).required(),
-    });
-  
-    const validationResult = schema.validate(req.body);
-    if (validationResult.error) {
-        return res.status(400).json({ error: validationResult.error.details[0].message });
+//GET /competitions/nagrada
+router.get("/nagrada/:id", function (req, res, next) {
+    const result = schema_id.validate(req.params);
+    if (result.error) {
+        throw new Error("Neispravan poziv");
     }
-  
-    const { rating, message } = req.body;
-    const stmt = db.prepare("INSERT INTO messages (rating, message, sender_id) VALUES (?, ?, ?)");
-    const messageSent = stmt.run(rating, message, req.user.sub);
-  
-    if (messageSent.changes && messageSent.changes === 1) {
-        res.render("/recenzije", { result: { messageSent: true } });
-    } else {
-        res.render("/recenzije", { result: { database_error: true } });
-    }
+    
 });
-
 
 
 
